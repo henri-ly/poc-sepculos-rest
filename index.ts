@@ -22,6 +22,7 @@ if (!coinapps) {
 app.post("/app-candidate", async (req, res) => {
   try {
     const appCandidates = await listAppCandidates(coinapps);
+    console.log(req.body);
     const appCandidate = findAppCandidate(appCandidates, req.body);
 
     if (!appCandidate) {
