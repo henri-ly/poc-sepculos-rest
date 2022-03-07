@@ -19,7 +19,7 @@ if (!coinapps) {
   throw new Error("COINAPPS is not set");
 }
 
-app.get("/app-candidate", async (req, res) => {
+app.post("/app-candidate", async (req, res) => {
   try {
     const appCandidates = await listAppCandidates(coinapps);
     const appCandidate = findAppCandidate(appCandidates, req.body);
@@ -37,7 +37,13 @@ app.get("/app-candidate", async (req, res) => {
 
 app.post("/", async (req, res) => {
   try {
-    const device = await createSpeculosDevice(req.body);
+    const device = await createSpeculosDevice({
+    ...req.body,
+    seed: seed,
+    coinapps: coinapps
+    });
+
+    console.log(device);
 
     return res.json(device);
   } catch (e: any) {
