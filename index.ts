@@ -1,4 +1,4 @@
-import express from "express";
+import express, { json } from "express";
 import cors from "cors";
 import {
   listAppCandidates,
@@ -10,6 +10,7 @@ import { getEnv } from "@ledgerhq/live-common/lib/env";
 
 const PORT = process.env.PORT ?? "4343";
 const app = express();
+app.use(json())
 const seed = process.env.SEED;
 if (!seed) {
   throw new Error("SEED is not set");
@@ -22,7 +23,6 @@ if (!coinapps) {
 app.post("/app-candidate", async (req, res) => {
   try {
     const appCandidates = await listAppCandidates(coinapps);
-    console.log(req.body);
     const appCandidate = findAppCandidate(appCandidates, req.body);
 
     if (!appCandidate) {
