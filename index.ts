@@ -2,11 +2,9 @@ import express, { json } from "express";
 import cors from "cors";
 import {
   listAppCandidates,
-  createSpeculosDevice,
-  releaseSpeculosDevice,
   findAppCandidate,
 } from "@ledgerhq/live-common/lib/load/speculos";
-import { getEnv } from "@ledgerhq/live-common/lib/env";
+import { createSpeculosDevice, releaseSpeculosDevice } from "./speculos";
 
 const PORT = process.env.PORT ?? "4343";
 const app = express();
