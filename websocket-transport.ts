@@ -1,5 +1,4 @@
 import Transport from "@ledgerhq/hw-transport";
-import { TransportError } from "@ledgerhq/errors";
 import { log } from "@ledgerhq/logs";
 
 declare global {
@@ -40,21 +39,13 @@ export default class WebSocketTransport extends Transport {
       socket.onclose = () => {
         if (success) resolve(undefined);
         else {
-          reject(
-            new (TransportError(
-              "failed to access WebSocketTransport(" + url + ")",
-              "WebSocketTransportNotAccessible"
-            ) as any)
-          );
+          reject(new Error("failed to access WebSocketTransport(" + url + ")"));
         }
       };
 
       socket.onerror = () => {
         reject(
-          new (TransportError(
-            "failed to access WebSocketTransport(" + url + "): error",
-            "WebSocketTransportNotAccessible"
-          ) as any)
+          new Error("failed to access WebSocketTransport(" + url + "): error")
         );
       };
     });
@@ -82,7 +73,7 @@ export default class WebSocketTransport extends Transport {
 
         socket.onclose = () => {
           exchangeMethods.onDisconnect();
-          reject(new (TransportError("OpenFailed", "OpenFailed") as any));
+          reject(new (Error("OpenFailed") as any)());
         };
 
         socket.onmessage = (e) => {
@@ -96,7 +87,7 @@ export default class WebSocketTransport extends Transport {
             case "error":
               reject(new Error(data.error));
               return exchangeMethods.rejectExchange(
-                new (TransportError(data.error, "WSError") as any)
+                new (Error(data.error) as any)()
               );
 
             case "response":
@@ -120,9 +111,7 @@ export default class WebSocketTransport extends Transport {
 
     hook.onDisconnect = () => {
       this.emit("disconnect");
-      this.hook.rejectExchange(
-        new (TransportError("WebSocket disconnected", "WSDisconnect") as any)
-      );
+      this.hook.rejectExchange(new Error("WebSocket disconnected"));
     };
   }
 
