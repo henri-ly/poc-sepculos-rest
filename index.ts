@@ -44,7 +44,6 @@ websocketServer.on("connection", (client, req) => {
   client.on("message", async (data) => {
     console.log("RECEIVED =>", data.toString());
     const message: MessageProxySpeculos = JSON.parse(data.toString());
-    console.log("RECEIVED =>", message);
     const device = devicesList[id];
     if (!device) {
       return client.send(
@@ -52,6 +51,7 @@ websocketServer.on("connection", (client, req) => {
       );
     }
 
+    try {
     switch (message.type) {
       case "open":
         client.send(JSON.stringify({ type: "opened" }));
@@ -63,6 +63,10 @@ websocketServer.on("connection", (client, req) => {
         client.send(JSON.stringify({ type: "response", data: res }));
         break;
     }
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
   });
 });
 
