@@ -35,9 +35,7 @@ type MessageProxySpeculos = {
 websocketServer.on("connection", (client, req) => {
   client.send(JSON.stringify({ message: "connected" }));
 
-  console.log(req.url);
-  const id = new URLSearchParams(req.url).get("id");
-  console.log("looking for ", id);
+  const id = /[^/]*$/.exec(req.url || "")?.[0];
   if (!id) {
     return client.send(
       JSON.stringify({ type: "error", error: "id not found" })
