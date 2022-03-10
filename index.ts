@@ -42,6 +42,7 @@ websocketServer.on("connection", (client, req) => {
     );
   }
   client.on("message", async (data) => {
+    console.log("RECEIVED =>", data.toString());
     const message: MessageProxySpeculos = JSON.parse(data.toString());
     console.log("RECEIVED =>", message);
     const device = devicesList[id];
