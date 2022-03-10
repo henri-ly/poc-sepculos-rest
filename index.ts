@@ -35,7 +35,8 @@ type MessageProxySpeculos = {
 websocketServer.on("connection", (client, req) => {
   client.send(JSON.stringify({ message: "connected" }));
 
-  const id = new URLSearchParams(req.url).get('id')
+  const id = new URLSearchParams(req.url).get("id");
+  console.log("looking for ", id);
   if (!id) {
     return client.send(
       JSON.stringify({ type: "error", message: "id not found" })
@@ -43,6 +44,7 @@ websocketServer.on("connection", (client, req) => {
   }
   client.on("message", async (data) => {
     const message: MessageProxySpeculos = JSON.parse(data.toString());
+    console.log("RECEIVED =>", message);
     const device = devicesList[id];
     if (!device) {
       return client.send(
@@ -52,12 +54,13 @@ websocketServer.on("connection", (client, req) => {
 
     switch (message.type) {
       case "open":
-        client.send(JSON.stringify({type: "opened"}));
+        client.send(JSON.stringify({ type: "opened" }));
         break;
 
       case "exchange":
-        const res = await device.exchange(Buffer.from(message.data, "hex"))
-        client.send(JSON.stringify({type: "response", data: res}));
+        const res = await device.exchange(Buffer.from(message.data, "hex"));
+        console.log("REPLY <=", res);
+        client.send(JSON.stringify({ type: "response", data: res }));
         break;
     }
   });
@@ -88,6 +91,8 @@ app.post("/", async (req, res) => {
     });
 
     devicesList[device.id] = device.transport;
+
+    console.log(device.id, "has been created");
 
     return res.json({ id: device.id });
   } catch (e: any) {
