@@ -73,7 +73,7 @@ export default class WebSocketTransport extends Transport {
 
         socket.onclose = () => {
           exchangeMethods.onDisconnect();
-          reject(new (Error("OpenFailed") as any)());
+          reject(new Error("OpenFailed"));
         };
 
         socket.onmessage = (e) => {
@@ -86,9 +86,7 @@ export default class WebSocketTransport extends Transport {
 
             case "error":
               reject(new Error(data.error));
-              return exchangeMethods.rejectExchange(
-                new (Error(data.error) as any)()
-              );
+              return exchangeMethods.rejectExchange(new Error(data.error));
 
             case "response":
               return exchangeMethods.resolveExchange(

@@ -7,7 +7,8 @@
     "@ledgerhq/live-common": "^21.34.0",
     "cors": "^2.8.5",
     "express": "^4.17.3",
-    "react": "^17.0.2"
+    "react": "^17.0.2",
+    "ws": "^8.5.0"
   },
   "scripts": {
     "build": "tsc",
