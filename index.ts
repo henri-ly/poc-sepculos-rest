@@ -30,16 +30,17 @@ const websocketServer = new WebSocket.Server({
 type MessageProxySpeculos = {
   type: "exchange" | "open" | "button" | "apdu";
   data: string;
-};
+} | { type: "error", error: string };
 
 websocketServer.on("connection", (client, req) => {
   client.send(JSON.stringify({ message: "connected" }));
 
+  console.log(req.url);
   const id = new URLSearchParams(req.url).get("id");
   console.log("looking for ", id);
   if (!id) {
     return client.send(
-      JSON.stringify({ type: "error", message: "id not found" })
+      JSON.stringify({ type: "error", error: "id not found" })
     );
   }
   client.on("message", async (data) => {
@@ -48,7 +49,7 @@ websocketServer.on("connection", (client, req) => {
     const device = devicesList[id];
     if (!device) {
       return client.send(
-        JSON.stringify({ type: "error", message: "device not found" })
+        JSON.stringify({ type: "error", error: "device not found" })
       );
     }
 
