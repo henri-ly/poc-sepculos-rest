@@ -21,7 +21,6 @@ if (!coinapps) {
 }
 
 const devicesList: Record<string, SpeculosTransport> = {};
-const clientList: any = {};
 
 const websocketServer = new WebSocket.Server({
   port: 8435,
@@ -41,10 +40,16 @@ websocketServer.on("connection", (client, req) => {
       JSON.stringify({ type: "error", error: "id not found" })
     );
   }
+  
   client.on("message", async (data) => {
     console.log("RECEIVED =>", data.toString());
     const message: MessageProxySpeculos = JSON.parse(data.toString());
     const device = devicesList[id];
+
+    device.apduSocket.on("data", (data) => {
+      console.log("DATA of APDU SOCKET", data);
+    })
+
     if (!device) {
       return client.send(
         JSON.stringify({ type: "error", error: "device not found" })
@@ -61,6 +66,10 @@ websocketServer.on("connection", (client, req) => {
         const res = await device.exchange(Buffer.from(message.data, "hex"));
         console.log("REPLY <=", res);
         client.send(JSON.stringify({ type: "response", data: res }));
+        break;
+
+      case "button":
+        device.button(message.data)
         break;
     }
   } catch (e) {
