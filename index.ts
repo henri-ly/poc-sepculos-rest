@@ -34,6 +34,11 @@ type MessageProxySpeculos =
     }
   | { type: "error"; error: string };
 
+const sendToClient = (client: WebSocket, data: any) => {
+  console.log("SEND : ", data);
+  client.send(data)
+}
+
 websocketServer.on("connection", (client, req) => {
   client.send(JSON.stringify({ message: "connected" }));
 
@@ -63,9 +68,7 @@ websocketServer.on("connection", (client, req) => {
 
         case "exchange":
           const res = await device.exchange(Buffer.from(message.data, "hex"));
-          client.send(
-            JSON.stringify({ type: "response", data: res })
-          );
+          client.send(JSON.stringify({ type: "response", data: res }));
           break;
 
         case "button":
@@ -130,11 +133,16 @@ app.post("/", async (req, res) => {
     });
 
     device.transport.apduSocket?.on("data", (data) => {
-      console.log("[DATA of APDU SOCKET]", data.toString("hex"));
+      console.log("[DATA of APDU SOCKET]", decodeAPDUPayload(data));
     });
 
     device.transport.apduSocket.on("error", (e) => {
-      console.log("[APDU ERROR]", e)
+      console.log("[APDU ERROR]", e);
+    });
+
+    device.transport.apduSocket.on("close", () => {
+      clientList[device.id].close();
+      delete clientList[device.id];
     })
 
     devicesList[device.id] = device.transport;
@@ -160,3 +168,19 @@ app.delete("/:id", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Listen to :${PORT}`);
 });
+
+function decodeAPDUPayload(data: Buffer) {
+  const dataLength = data.readUIntBE(0, 4); // 4 bytes tells the data length
+
+  const size = dataLength + 2; // size does not include the status code so we add 2
+
+  const payload = data.slice(4);
+
+  if (payload.length !== size) {
+    throw new Error(
+      `Expected payload of length ${size} but got ${payload.length}`
+    );
+  }
+
+  return payload;
+}
