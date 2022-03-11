@@ -36,8 +36,8 @@ type MessageProxySpeculos =
 
 const sendToClient = (client: WebSocket, data: any) => {
   console.log("SEND : ", data);
-  client.send(data)
-}
+  client.send(data);
+};
 
 websocketServer.on("connection", (client, req) => {
   sendToClient(client, JSON.stringify({ message: "connected" }));
@@ -55,7 +55,8 @@ websocketServer.on("connection", (client, req) => {
     const device = devicesList[id];
 
     if (!device) {
-      sendToClient(client,
+      sendToClient(
+        client,
         JSON.stringify({ type: "error", error: "device not found" })
       );
     }
@@ -141,9 +142,11 @@ app.post("/", async (req, res) => {
     });
 
     device.transport.apduSocket.on("close", () => {
-      clientList[device.id].close();
-      delete clientList[device.id];
-    })
+      if (clientList[device.id]) {
+        clientList[device.id].close();
+        delete clientList[device.id];
+      }
+    });
 
     devicesList[device.id] = device.transport;
 
