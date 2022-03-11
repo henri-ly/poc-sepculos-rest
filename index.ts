@@ -51,7 +51,13 @@ websocketServer.on("connection", (client, req) => {
     device.automationSocket?.on("data", (data) => {
       console.log("[DATA of AUTOMATION SOCKET]", data.toString("ascii"));
 
-      client.send(JSON.stringify({ type: "screen", data: data.toString("ascii") }));
+      const split = data.toString("ascii").split("\n");
+      split
+        .filter((ascii) => !!ascii)
+        .forEach((ascii) => {
+          const json = JSON.parse(ascii);
+          client.send(JSON.stringify(json));
+        });
     });
 
     device.apduSocket?.on("data", (data) => {
