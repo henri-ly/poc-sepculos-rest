@@ -40,7 +40,7 @@ const sendToClient = (client: WebSocket, data: any) => {
 }
 
 websocketServer.on("connection", (client, req) => {
-  client.send(JSON.stringify({ message: "connected" }));
+  sendToClient(client, JSON.stringify({ message: "connected" }));
 
   const id = /[^/]*$/.exec(req.url || "")?.[0];
   if (!id) {
@@ -55,7 +55,7 @@ websocketServer.on("connection", (client, req) => {
     const device = devicesList[id];
 
     if (!device) {
-      return client.send(
+      sendToClient(client,
         JSON.stringify({ type: "error", error: "device not found" })
       );
     }
@@ -63,12 +63,12 @@ websocketServer.on("connection", (client, req) => {
     try {
       switch (message.type) {
         case "open":
-          client.send(JSON.stringify({ type: "opened" }));
+          sendToClient(client, JSON.stringify({ type: "opened" }));
           break;
 
         case "exchange":
           const res = await device.exchange(Buffer.from(message.data, "hex"));
-          client.send(JSON.stringify({ type: "response", data: res }));
+          sendToClient(client, JSON.stringify({ type: "response", data: res }));
           break;
 
         case "button":
