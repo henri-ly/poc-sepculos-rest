@@ -124,6 +124,10 @@ app.post("/", async (req, res) => {
         });
     });
 
+    device.transport.automationSocket?.on("error", (e) => {
+      console.log("ERROR", e);
+    });
+
     device.transport.apduSocket?.on("data", (data) => {
       console.log("[DATA of APDU SOCKET]", data.toString("hex"));
     });
