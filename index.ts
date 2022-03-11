@@ -21,6 +21,7 @@ if (!coinapps) {
 }
 
 const devicesList: Record<string, SpeculosTransport> = {};
+const clientList: Record<string, WebSocket[]> = {};
 
 const websocketServer = new WebSocket.Server({
   port: 8435,
@@ -47,22 +48,6 @@ websocketServer.on("connection", (client, req) => {
     console.log("RECEIVED =>", data.toString());
     const message: MessageProxySpeculos = JSON.parse(data.toString());
     const device = devicesList[id];
-
-    device.automationSocket?.on("data", (data) => {
-      console.log("[DATA of AUTOMATION SOCKET]", data.toString("ascii"));
-
-      const split = data.toString("ascii").split("\n");
-      split
-        .filter((ascii) => !!ascii)
-        .forEach((ascii) => {
-          const json = JSON.parse(ascii);
-          client.send(JSON.stringify({ type: "screen", data: json }));
-        });
-    });
-
-    device.apduSocket?.on("data", (data) => {
-      console.log("[DATA of APDU SOCKET]", data.toString("hex"));
-    });
 
     if (!device) {
       return client.send(
@@ -117,9 +102,27 @@ app.post("/", async (req, res) => {
       coinapps: coinapps,
     });
 
-    devicesList[device.id] = device.transport;
-
     console.log(device.id, "has been created");
+
+    device.transport.automationSocket?.on("data", (data) => {
+      console.log("[DATA of AUTOMATION SOCKET]", data.toString("ascii"));
+
+      const split = data.toString("ascii").split("\n");
+      split
+        .filter((ascii) => !!ascii)
+        .forEach((ascii) => {
+          const json = JSON.parse(ascii);
+          clientList[device.id].forEach((client) => {
+            client.send(JSON.stringify({ type: "screen", data: json }));
+          });
+        });
+    });
+
+    device.transport.apduSocket?.on("data", (data) => {
+      console.log("[DATA of APDU SOCKET]", data.toString("hex"));
+    });
+
+    devicesList[device.id] = device.transport;
 
     return res.json({ id: device.id });
   } catch (e: any) {
