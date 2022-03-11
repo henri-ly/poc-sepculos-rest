@@ -56,7 +56,7 @@ websocketServer.on("connection", (client, req) => {
         .filter((ascii) => !!ascii)
         .forEach((ascii) => {
           const json = JSON.parse(ascii);
-          client.send(JSON.stringify(json));
+          client.send(JSON.stringify({ type: "screen", data: json }));
         });
     });
 
