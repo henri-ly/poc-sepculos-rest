@@ -21,7 +21,7 @@ if (!coinapps) {
 }
 
 const devicesList: Record<string, SpeculosTransport> = {};
-const clientList: Record<string, WebSocket[]> = {};
+const clientList: Record<string, WebSocket> = {};
 
 const websocketServer = new WebSocket.Server({
   port: 8435,
@@ -76,6 +76,12 @@ websocketServer.on("connection", (client, req) => {
       throw e;
     }
   });
+
+  clientList[id] = client;
+
+  client.on("close", () => {
+    delete clientList[id];
+  });
 });
 
 app.post("/app-candidate", async (req, res) => {
@@ -112,9 +118,9 @@ app.post("/", async (req, res) => {
         .filter((ascii) => !!ascii)
         .forEach((ascii) => {
           const json = JSON.parse(ascii);
-          clientList[device.id].forEach((client) => {
-            client.send(JSON.stringify({ type: "screen", data: json }));
-          });
+          clientList[device.id].send(
+            JSON.stringify({ type: "screen", data: json })
+          );
         });
     });
 
