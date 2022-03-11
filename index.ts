@@ -46,8 +46,12 @@ websocketServer.on("connection", (client, req) => {
     const message: MessageProxySpeculos = JSON.parse(data.toString());
     const device = devicesList[id];
 
-    device.apduSocket.on("data", (data) => {
-      console.log("DATA of APDU SOCKET", data);
+    device.automationSocket?.on("data", (data) => {
+      console.log("[DATA of AUTOMATION SOCKET]", data.toString("ascii"));
+    })
+
+    device.apduSocket?.on("data", (data) => {
+      console.log("[DATA of APDU SOCKET]", data.toString());
     })
 
     if (!device) {
