@@ -62,7 +62,10 @@ websocketServer.on("connection", (client, req) => {
           break;
 
         case "exchange":
-          await device.exchange(Buffer.from(message.data, "hex"));
+          const res = await device.exchange(Buffer.from(message.data, "hex"));
+          client.send(
+            JSON.stringify({ type: "response", data: res })
+          );
           break;
 
         case "button":
@@ -128,10 +131,6 @@ app.post("/", async (req, res) => {
 
     device.transport.apduSocket?.on("data", (data) => {
       console.log("[DATA of APDU SOCKET]", data.toString("hex"));
-
-      clientList[device.id].send(
-        JSON.stringify({ type: "response", data: data.toString("hex") })
-      );
     });
 
     device.transport.apduSocket.on("error", (e) => {
