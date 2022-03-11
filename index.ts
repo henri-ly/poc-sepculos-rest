@@ -26,10 +26,12 @@ const websocketServer = new WebSocket.Server({
   port: 8435,
 });
 
-type MessageProxySpeculos = {
-  type: "exchange" | "open" | "button" | "apdu";
-  data: string;
-} | { type: "error", error: string };
+type MessageProxySpeculos =
+  | {
+      type: "exchange" | "open" | "button" | "apdu";
+      data: string;
+    }
+  | { type: "error"; error: string };
 
 websocketServer.on("connection", (client, req) => {
   client.send(JSON.stringify({ message: "connected" }));
@@ -40,7 +42,7 @@ websocketServer.on("connection", (client, req) => {
       JSON.stringify({ type: "error", error: "id not found" })
     );
   }
-  
+
   client.on("message", async (data) => {
     console.log("RECEIVED =>", data.toString());
     const message: MessageProxySpeculos = JSON.parse(data.toString());
@@ -48,11 +50,13 @@ websocketServer.on("connection", (client, req) => {
 
     device.automationSocket?.on("data", (data) => {
       console.log("[DATA of AUTOMATION SOCKET]", data.toString("ascii"));
-    })
+
+      client.send({ type: "screen", data: data.toString("ascii") });
+    });
 
     device.apduSocket?.on("data", (data) => {
-      console.log("[DATA of APDU SOCKET]", data.toString());
-    })
+      console.log("[DATA of APDU SOCKET]", data.toString("hex"));
+    });
 
     if (!device) {
       return client.send(
@@ -61,25 +65,25 @@ websocketServer.on("connection", (client, req) => {
     }
 
     try {
-    switch (message.type) {
-      case "open":
-        client.send(JSON.stringify({ type: "opened" }));
-        break;
+      switch (message.type) {
+        case "open":
+          client.send(JSON.stringify({ type: "opened" }));
+          break;
 
-      case "exchange":
-        const res = await device.exchange(Buffer.from(message.data, "hex"));
-        console.log("REPLY <=", res);
-        client.send(JSON.stringify({ type: "response", data: res }));
-        break;
+        case "exchange":
+          const res = await device.exchange(Buffer.from(message.data, "hex"));
+          console.log("REPLY <=", res);
+          client.send(JSON.stringify({ type: "response", data: res }));
+          break;
 
-      case "button":
-        device.button(message.data)
-        break;
+        case "button":
+          device.button(message.data);
+          break;
+      }
+    } catch (e) {
+      console.log(e);
+      throw e;
     }
-  } catch (e) {
-    console.log(e);
-    throw e;
-  }
   });
 });
 
