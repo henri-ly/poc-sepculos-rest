@@ -34,9 +34,11 @@ type MessageProxySpeculos =
     }
   | { type: "error"; error: string };
 
-const sendToClient = (client: WebSocket, data: any) => {
-  console.log("SEND : ", data);
-  client.send(data);
+const sendToClient = (client: WebSocket | undefined, data: any) => {
+  if (client) {
+    console.log("SEND : ", data);
+    client.send(data);
+  }
 };
 
 websocketServer.on("connection", (client, req) => {
@@ -123,7 +125,8 @@ app.post("/", async (req, res) => {
         .filter((ascii) => !!ascii)
         .forEach((ascii) => {
           const json = JSON.parse(ascii);
-          clientList[device.id].send(
+          sendToClient(
+            clientList[device.id],
             JSON.stringify({ type: "screen", data: json })
           );
         });
@@ -143,9 +146,11 @@ app.post("/", async (req, res) => {
 
     device.transport.apduSocket.on("end", () => {
       console.log("[APDU END]");
-      sendToClient(clientList[device.id], JSON.stringify({ type: "close" }));
-      clientList[device.id].close();
-      delete clientList[device.id];
+      if (clientList[device.id]) {
+        sendToClient(clientList[device.id], JSON.stringify({ type: "close" }));
+        clientList[device.id].close();
+        delete clientList[device.id];
+      }
     });
 
     device.transport.apduSocket.on("close", () => {
