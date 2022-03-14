@@ -143,6 +143,9 @@ app.post("/", async (req, res) => {
 
     device.transport.apduSocket.on("end", () => {
       console.log("[APDU END]");
+      sendToClient(clientList[device.id], JSON.stringify({ type: "close" }));
+      clientList[device.id].close();
+      delete clientList[device.id];
     });
 
     device.transport.apduSocket.on("close", () => {
